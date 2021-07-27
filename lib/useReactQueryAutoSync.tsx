@@ -146,7 +146,15 @@ export function useReactQueryAutoSync<
         // TODO(lukemurray): This doesn't quite work
         // see https://calendar.perfplanet.com/2020/beaconing-in-practice/#beaconing-incrementally-gathering-telemtry
         // and https://github.com/wealthsimple/beforeunload-request
-        // we really want to replace with sendBeacon
+        // if we do expose this it would have the following options
+        // interface SaveOptions {
+        //   url: string;
+        //   options: Pick<RequestInit, "method" | "headers" | "body" | "credentials">;
+        // }
+        // first try navigator.sendBeacon
+        // then try xhmlhttprequest
+        // then try fetch with keepalive
+        // it should return true if it succeeds (this is based on the beforeunload-request)
         saveAndCancelDebounced();
       }
     };
