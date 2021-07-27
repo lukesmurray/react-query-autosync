@@ -22,6 +22,7 @@ export function useReactQueryAutoSync<
   mutationOptions,
   autoSaveOptions,
   merge,
+  alertIfUnsavedChanges,
 }: {
   queryOptions: UseQueryOptions<TQueryFnData, TQueryError, TQueryData, TQueryKey>;
   mutationOptions: UseMutationOptions<
@@ -32,6 +33,7 @@ export function useReactQueryAutoSync<
   >;
   autoSaveOptions?: AutoSaveOptions;
   merge?: MergeFunc<TQueryData>;
+  alertIfUnsavedChanges?: boolean;
 }) {
   const [draft, setDraft] = useState<TQueryData | undefined>(undefined);
 
@@ -127,9 +129,10 @@ export function useReactQueryAutoSync<
   useEffect(() => {
     // create a closure for the draft
     const currentDraft = draft;
+    const shouldPreventUserFromLeaving = currentDraft === undefined && alertIfUnsavedChanges;
 
     const alertUserIfDraftIsUnsaved = (e: BeforeUnloadEvent) => {
-      if (currentDraft !== undefined) {
+      if (shouldPreventUserFromLeaving) {
         // Cancel the event
         e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
         // Chrome requires returnValue to be set
@@ -140,37 +143,37 @@ export function useReactQueryAutoSync<
       }
     };
 
-    const saveDraftOnVisibilityChange = () => {
-      // fires when user switches tabs, apps, goes to home screen, etc.
-      if (document.visibilityState == "hidden") {
-        // TODO(lukemurray): This doesn't quite work
-        // see https://calendar.perfplanet.com/2020/beaconing-in-practice/#beaconing-incrementally-gathering-telemtry
-        // and https://github.com/wealthsimple/beforeunload-request
-        // if we do expose this it would have the following options
-        // interface SaveOptions {
-        //   url: string;
-        //   options: Pick<RequestInit, "method" | "headers" | "body" | "credentials">;
-        // }
-        // first try navigator.sendBeacon
-        // then try xhmlhttprequest
-        // then try fetch with keepalive
-        // it should return true if it succeeds (this is based on the beforeunload-request)
-        saveAndCancelDebounced();
-      }
-    };
+    // const saveDraftOnVisibilityChange = () => {
+    //   // fires when user switches tabs, apps, goes to home screen, etc.
+    //   if (document.visibilityState == "hidden") {
+    //     // TODO(lukemurray): This doesn't quite work
+    //     // see https://calendar.perfplanet.com/2020/beaconing-in-practice/#beaconing-incrementally-gathering-telemtry
+    //     // and https://github.com/wealthsimple/beforeunload-request
+    //     // if we do expose this it would have the following options
+    //     // interface SaveOptions {
+    //     //   url: string;
+    //     //   options: Pick<RequestInit, "method" | "headers" | "body" | "credentials">;
+    //     // }
+    //     // first try navigator.sendBeacon
+    //     // then try xhmlhttprequest
+    //     // then try fetch with keepalive
+    //     // it should return true if it succeeds (this is based on the beforeunload-request)
+    //     saveAndCancelDebounced();
+    //   }
+    // };
 
     // only add beforeUnload if there is unsaved work to avoid performance penalty
-    if (currentDraft !== undefined) {
+    if (shouldPreventUserFromLeaving) {
       window.addEventListener("beforeunload", alertUserIfDraftIsUnsaved);
     }
-    document.addEventListener("visibilitychange", saveDraftOnVisibilityChange);
+    // document.addEventListener("visibilitychange", saveDraftOnVisibilityChange);
     return () => {
-      if (currentDraft !== undefined) {
+      if (shouldPreventUserFromLeaving) {
         window.removeEventListener("beforeunload", alertUserIfDraftIsUnsaved);
       }
-      document.removeEventListener("visibilitychange", saveDraftOnVisibilityChange);
+      // document.removeEventListener("visibilitychange", saveDraftOnVisibilityChange);
     };
-  }, [draft, saveAndCancelDebounced]);
+  }, [alertIfUnsavedChanges, draft, saveAndCancelDebounced]);
 
   // merge the local data with the server data when the server data changes
   useEffect(() => {
