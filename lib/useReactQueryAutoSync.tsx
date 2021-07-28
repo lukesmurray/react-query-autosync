@@ -1,6 +1,15 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QueryKey, useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "react-query";
+
+/**
+ * Empty function used to avoid the overhead of `lodash.debounce` if autoSaveOptions are not used.
+ */
+const EmptyDebounceFunc = Object.assign(() => {}, {
+  flush: () => {},
+  cancel: () => {},
+});
 
 export interface AutoSaveOptions {
   wait: number;
@@ -92,11 +101,13 @@ export function useReactQueryAutoSync<
   // memoize a debounced save function
   const saveDebounced = useMemo(
     () =>
-      debounce(save, autoSaveOptions?.wait, {
-        // only pass maxWait to the options if maxWait is defined
-        // if maxWait is undefined it is set to 0
-        ...(autoSaveOptions?.maxWait !== undefined ? { maxWait: autoSaveOptions?.maxWait } : {}),
-      }),
+      autoSaveOptions?.wait === undefined
+        ? EmptyDebounceFunc
+        : debounce(save, autoSaveOptions?.wait, {
+            // only pass maxWait to the options if maxWait is defined
+            // if maxWait is undefined it is set to 0
+            ...(autoSaveOptions?.maxWait !== undefined ? { maxWait: autoSaveOptions?.maxWait } : {}),
+          }),
     [autoSaveOptions?.maxWait, autoSaveOptions?.wait, save],
   );
 
@@ -127,9 +138,7 @@ export function useReactQueryAutoSync<
 
   // confirm before the user leaves if the draft value isn't saved
   useEffect(() => {
-    // create a closure for the draft
-    const currentDraft = draft;
-    const shouldPreventUserFromLeaving = currentDraft === undefined && alertIfUnsavedChanges;
+    const shouldPreventUserFromLeaving = draft !== undefined && alertIfUnsavedChanges;
 
     const alertUserIfDraftIsUnsaved = (e: BeforeUnloadEvent) => {
       if (shouldPreventUserFromLeaving) {
