@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { QueryKey, useMutation, UseMutationOptions, useQuery, useQueryClient, UseQueryOptions } from "react-query";
+import {
+  QueryKey,
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+  UseQueryResult,
+} from "react-query";
 
 /**
  * Empty function used to avoid the overhead of `lodash.debounce` if autoSaveOptions are not used.
@@ -11,13 +20,57 @@ const EmptyDebounceFunc = Object.assign(() => {}, {
   cancel: () => {},
 });
 
+/**
+ * Options used to control auto save function debounced with `lodash.debounce`
+ */
 export interface AutoSaveOptions {
+  /**
+   * Number of milliseconds to delay the debounce function
+   */
   wait: number;
+  /**
+   * Maximum number of milliseconds to delay the debounce function. If undefined
+   * there is no maximum delay.
+   */
   maxWait?: number;
 }
 
+/**
+ * Function used to merge server data with local modification of server data
+ */
 export type MergeFunc<TQueryData> = (remote: TQueryData, local: TQueryData) => TQueryData;
 
+/**
+ * Return type of UseReactQueryAutoSync
+ */
+export type UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> = {
+  /**
+   * Function used to manually save the data to the server
+   */
+  save: () => void;
+  /**
+   * Function used to update server data. Be careful avoid modifying the draft
+   * directly and instead set the draft to a copy.
+   */
+  setDraft: React.Dispatch<React.SetStateAction<TQueryData | undefined>>;
+  /**
+   * The current value of the data either locally modified or taken from the server.
+   * May be undefined if the data is not yet loaded.
+   */
+  draft: TQueryData | undefined;
+  /**
+   * The result of `useQuery`
+   */
+  queryResult: UseQueryResult<TQueryData, TQueryError>;
+  /**
+   * The result of `useMutation`
+   */
+  mutationResult: UseMutationResult<TMutationData, TMutationError, TQueryData, TMutationContext>;
+};
+
+/**
+ * React hook which can be used to automatically save and update query data.
+ */
 export function useReactQueryAutoSync<
   TQueryFnData = unknown,
   TQueryError = unknown,
@@ -33,17 +86,39 @@ export function useReactQueryAutoSync<
   merge,
   alertIfUnsavedChanges,
 }: {
+  /**
+   * queryOptions passed to `useQuery`
+   */
   queryOptions: UseQueryOptions<TQueryFnData, TQueryError, TQueryData, TQueryKey>;
+  /**
+   * mutationOptions passed to `useMutation`. Internally the hook uses
+   * `onMutate`, `onError`, and `onSettled` to optimistically update the draft.
+   */
   mutationOptions: UseMutationOptions<
     TMutationData,
     TMutationError,
     TQueryData, // input to mutate is the same as the output of the query
     TMutationContext
   >;
+  /**
+   * options passed to `lodash.debounce` to automatically save the query data to
+   * the server with a debounced save function.  if undefined the hook will not
+   * automatically save data to the server.
+   */
   autoSaveOptions?: AutoSaveOptions;
+  /**
+   * function used to merge updates from the server with the local changes to
+   * the server data.  if undefined the hook will ignore background updates from
+   * the server and local changes will overwrite data from the server.
+   */
   merge?: MergeFunc<TQueryData>;
+  /**
+   * Ask the user to confirm before leaving the page if there are local
+   * modification to server data.  If false or undefined the user is allowed to
+   * leave the page.
+   */
   alertIfUnsavedChanges?: boolean;
-}) {
+}): UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> {
   const [draft, setDraft] = useState<TQueryData | undefined>(undefined);
 
   // create a stable ref to the draft so we can memoize the save function

@@ -1,3 +1,4 @@
+import typescript from "@rollup/plugin-typescript";
 import reactRefresh from "@vitejs/plugin-react-refresh";
 import path from "path";
 import { defineConfig } from "vite";
@@ -23,6 +24,13 @@ export default defineConfig({
           ["react-query"]: "ReactQuery",
         },
       },
+      plugins: [
+        typescript({
+          declaration: true,
+          declarationDir: path.resolve(__dirname, "dist"),
+          include: ["./lib/*"],
+        }),
+      ],
     },
   },
 });

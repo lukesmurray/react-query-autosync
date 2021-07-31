@@ -1,11 +1,3 @@
-# useReactQueryAutoSync
-
-A helpful react hook for building interfaces which require autosave.
-Read more about the motivation and design in the [original blog post](https://lsmurray.com/blog/react-query-auto-sync-hook).
-
-## Example
-
-```ts
 import React from "react";
 import { useReactQueryAutoSync } from "../lib/useReactQueryAutoSync";
 
@@ -50,10 +42,3 @@ export function Demo() {
     </>
   );
 }
-```
-
-## TODO
-
-- create a demo with [perfect-freehand](https://github.com/steveruizok/perfect-freehand)
-- compare with alternatives such as websockets, long polling, replicache
-- When is this a good idea, when are alternatives better?

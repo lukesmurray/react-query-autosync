@@ -3,6 +3,7 @@
   "files": [
     "dist"
   ],
+  "types": "./dist/main.d.ts",
   "main": "./dist/use-react-query-auto-sync.umd.js",
   "module": "./dist/use-react-query-auto-sync.es.js",
   "exports": {
@@ -11,13 +12,14 @@
       "require": "./dist/use-react-query-auto-sync.umd.js"
     }
   },
-  "version": "0.0.0",
+  "version": "0.0.1",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview"
   },
   "dependencies": {
+    "@rollup/plugin-typescript": "^8.2.5",
     "lodash.debounce": "^4.0.8",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
