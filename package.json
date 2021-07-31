@@ -12,7 +12,15 @@
       "require": "./dist/use-react-query-auto-sync.umd.js"
     }
   },
-  "version": "0.0.1",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukesmurray/react-query-autosync.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lukesmurray/react-query-autosync/issues"
+  },
+  "version": "0.0.2",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
