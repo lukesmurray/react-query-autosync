@@ -2,6 +2,9 @@
 
 A helpful react hook for building interfaces which require autosave.
 Read more about the motivation and design in the [original blog post](https://lsmurray.com/blog/react-query-auto-sync-hook).
+Check out the quick example below or feel free to run the [drawing demo](./src/components/Demo.tsx) on your own machine.
+To run the drawing demo simply clone the repository and run `yarn` followed by `yarn dev`.
+If you open two browser windows to `localhost:3000` you can click to draw and the drawings will sync between pages.
 
 ## Example
 
@@ -54,6 +57,8 @@ export function Demo() {
 
 ## TODO
 
-- create a demo with [perfect-freehand](https://github.com/steveruizok/perfect-freehand)
+- ~~create a demo with [perfect-freehand](https://github.com/steveruizok/perfect-freehand)~~
 - compare with alternatives such as websockets, long polling, replicache
 - When is this a good idea, when are alternatives better?
+- See if it is possible to have `setDraft` use the server value if the local value is not defined
+  - otherwise you cannot memoize a `setDraft` function

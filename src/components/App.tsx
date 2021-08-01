@@ -6,7 +6,11 @@ import { Demo } from "./Demo";
 
 if (process.env.NODE_ENV === "development") {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  import("./mocks/browser").then((res) => res.worker.start());
+  import("../mocks/browser").then((res) =>
+    res.worker.start({
+      quiet: true,
+    }),
+  );
 }
 
 const queryClient = new QueryClient();
