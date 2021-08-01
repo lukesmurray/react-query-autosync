@@ -2,10 +2,15 @@ import typescript from "@rollup/plugin-typescript";
 import reactRefresh from "@vitejs/plugin-react-refresh";
 import path from "path";
 import { defineConfig } from "vite";
+import macrosPlugin from "vite-plugin-babel-macros";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [reactRefresh()],
+  plugins: [reactRefresh(), macrosPlugin()],
+  define: {
+    "process.platform": JSON.stringify("win32"),
+    "process.env": {},
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, "lib/main.ts"),
