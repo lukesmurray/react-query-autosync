@@ -20,7 +20,7 @@
   "bugs": {
     "url": "https://github.com/lukesmurray/react-query-autosync/issues"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "dev": "vite --config vite.example.config.ts",
     "build:example": "vite build --config vite.example.config.ts",
