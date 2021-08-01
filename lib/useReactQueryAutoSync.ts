@@ -125,6 +125,10 @@ export function useReactQueryAutoSync<
   const draftRef = useRef<TQueryData | undefined>(undefined);
   draftRef.current = draft;
 
+  // create a stable ref to the merge so we can memoize the merge effect
+  const mergeRef = useRef<MergeFunc<TQueryData> | undefined>(undefined);
+  mergeRef.current = merge;
+
   const queryResult = useQuery(queryOptions);
 
   const queryClient = useQueryClient();
@@ -262,14 +266,15 @@ export function useReactQueryAutoSync<
   // merge the local data with the server data when the server data changes
   useEffect(() => {
     const serverData = queryResult.data;
-    if (serverData !== undefined && merge !== undefined) {
+    const currentMergeFunc = mergeRef.current;
+    if (serverData !== undefined && currentMergeFunc !== undefined) {
       setDraft((localData) => {
         if (localData !== undefined) {
-          return merge(serverData, localData);
+          return currentMergeFunc(serverData, localData);
         }
       });
     }
-  }, [merge, queryResult.data]);
+  }, [queryResult.data]);
 
   return {
     save: saveAndCancelDebounced,
