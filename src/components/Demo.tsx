@@ -3,7 +3,7 @@ import { button, useControls } from "leva";
 import { nanoid } from "nanoid";
 import getStroke from "perfect-freehand";
 import React, { useEffect, useRef, useState } from "react";
-import tw from "twin.macro";
+import tw, { css } from "twin.macro";
 import { useReactQueryAutoSync } from "../../lib/useReactQueryAutoSync";
 import { getSvgPathFromStroke } from "../utils/getSvgPathFromStroke";
 import { SaveIndicator } from "./SaveIndicator";
@@ -32,7 +32,12 @@ export function Demo() {
         ref={eventElementRef}
         height="100%"
         width="100%"
-        css={[tw`bg-gray-100 rounded-md`]}
+        css={[
+          tw`bg-gray-100 rounded-md`,
+          css`
+            touch-action: none;
+          `,
+        ]}
         viewBox={`0 0 ${rect?.width ?? 100} ${rect?.height ?? 100}`}
       >
         <g>
