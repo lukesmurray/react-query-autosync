@@ -1,10 +1,22 @@
 # useReactQueryAutoSync
 
+![](https://img.shields.io/npm/v/use-react-query-auto-sync?label=npm)
+![](https://img.shields.io/bundlephobia/minzip/use-react-query-auto-sync)
+
 A helpful react hook for building interfaces which require autosave.
 Read more about the motivation and design in the [original blog post](https://lsmurray.com/blog/react-query-auto-sync-hook).
-Check out the quick example below or feel free to run the [drawing demo](./src/components/Demo.tsx) on your own machine.
-To run the drawing demo simply clone the repository and run `yarn` followed by `yarn dev`.
-If you open two browser windows to `localhost:3000` you can click to draw and the drawings will sync between pages.
+Check out the quick example below or feel free to view the [drawing demo](https://react-query-auto-sync.lsmurray.com/) online.
+The code for the demo is in the [src](./src) folder and can be run locally with `yarn dev`.
+
+## Installation
+
+```sh
+# npm
+npm install use-react-query-auto-sync
+
+# yarn
+yarn add use-react-query-auto-sync
+```
 
 ## Example
 
