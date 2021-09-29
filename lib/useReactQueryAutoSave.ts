@@ -1,8 +1,7 @@
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, UseMutationOptions, UseMutationResult } from "react-query";
-import { AutoSaveOptions } from "./utils/AutoSaveOptions";
-import { EmptyDebounceFunc } from "./utils/EmptyDebounceFunc";
+import { AutoSaveOptions, EmptyDebounceFunc, MergeFunc } from "./utils";
 
 /**
  * Return type of UseReactQueryAutoSync
@@ -40,6 +39,7 @@ export function useReactQueryAutoSave<
   mutationOptions,
   autoSaveOptions,
   alertIfUnsavedChanges,
+  merge,
 }: {
   /**
    * mutationOptions passed to `useMutation`. Internally the hook uses
@@ -58,6 +58,11 @@ export function useReactQueryAutoSave<
    * leave the page.
    */
   alertIfUnsavedChanges?: boolean;
+  /**
+   * function used to merge optimistic updates when saving to the server fails
+   * and the user has made intermittent updates to the draft
+   */
+  merge?: MergeFunc<TData>;
 }): UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TMutationContext> {
   const [draft, setDraft] = useState<TData | undefined>(undefined);
   const [serverValue, setServerValue] = useState<TData | undefined>(undefined);
@@ -65,6 +70,10 @@ export function useReactQueryAutoSave<
   // create a stable ref to the draft so we can memoize the save function
   const draftRef = useRef<TData | undefined>(undefined);
   draftRef.current = draft;
+
+  // create a stable ref to the merge so we can memoize the merge effect
+  const mergeRef = useRef<MergeFunc<TData> | undefined>(undefined);
+  mergeRef.current = merge;
 
   // we provide options to useMutation that optimistically update our state
   const mutationResult = useMutation({
@@ -82,14 +91,22 @@ export function useReactQueryAutoSave<
         ...mutationOptions.onMutate?.(draft),
       } as any;
     },
-    onError: (err, draft, context) => {
-      // reset the server state to the last known state
-      setServerValue((context as any).previousData);
-      // reset the draft to the last known draft unless the user made more changes
-      if (draft !== undefined) {
-        setDraft(draft as any);
+    onError: (err, prevDraft, context) => {
+      // if the user has not made any more local changes reset the draft
+      // to last known state
+      if (draft === undefined) {
+        setDraft(prevDraft);
+      } else {
+        const mergeFunc = mergeRef.current;
+        // if the user has defined a merge func merge the previous and current changes
+        if (mergeFunc) {
+          setDraft(mergeFunc(prevDraft, draft));
+        } else {
+          // rollback the draft to the last known state
+          setDraft(prevDraft);
+        }
       }
-      return mutationOptions.onError?.(err, draft, context);
+      return mutationOptions.onError?.(err, prevDraft, context);
     },
   });
 

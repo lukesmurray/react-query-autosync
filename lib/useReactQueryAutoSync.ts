@@ -12,11 +12,7 @@ import {
 } from "react-query";
 import { AutoSaveOptions } from "./utils/AutoSaveOptions";
 import { EmptyDebounceFunc } from "./utils/EmptyDebounceFunc";
-
-/**
- * Function used to merge server data with local modification of server data
- */
-export type MergeFunc<TQueryData> = (remote: TQueryData, local: TQueryData) => TQueryData;
+import { MergeFunc } from "./utils/MergeFunc";
 
 /**
  * Return type of UseReactQueryAutoSync
@@ -130,14 +126,24 @@ export function useReactQueryAutoSync<
         ...mutationOptions.onMutate?.(draft),
       } as any;
     },
-    onError: (err, draft, context) => {
+    onError: (err, prevDraft, context) => {
       // reset the server state to the last known state
       queryClient.setQueryData(queryKey, (context as any).previousData);
-      // reset the draft to the last known draft unless the user made more changes
-      if (draft !== undefined) {
-        setDraft(draft as any);
+      // if the user has not made any more local changes reset the draft
+      // to last known state
+      if (draft === undefined) {
+        setDraft(prevDraft);
+      } else {
+        const mergeFunc = mergeRef.current;
+        // if the user has defined a merge func merge the previous and current changes
+        if (mergeFunc) {
+          setDraft(mergeFunc(prevDraft, draft));
+        } else {
+          // rollback the draft to the last known state
+          setDraft(prevDraft);
+        }
       }
-      return mutationOptions.onError?.(err, draft, context);
+      return mutationOptions.onError?.(err, prevDraft, context);
     },
     onSettled: (data, error, variables, context) => {
       // refetch after error or success:
