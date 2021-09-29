@@ -31,6 +31,7 @@ The `Save` hook is used to automatically save local changes to data to the serve
 - `autoSaveOptions`: see autoSaveOptionsBelow. If undefined the hook will not automatically save data.
 - `merge`: function used to merge updates from the server with local changes to server data. If undefined the hook will ignore background updates from the server and local changes will overwrite data from the server. If the merge function is undefined and the hook fails to save data to the server, it will overwrite intermittent changes with the data that failed to save. If the merge function is defined the hook will merge the changes which failed to save with new changes.
 - `alertIfUnsavedChanges`: ask the user to confirm before leaving the page if there are unsaved changes. If undefined the hook will not ask the user to confirm before leaving.
+- `mutateEnabled`: whether or not the mutation is enabled. If undefined defaults to true. If mutateEnabled is false and save is called either manually or by the automatic debounce function, a pending save will be created, and when mutate is enabled the pending save will immediately execute.
 
 ### `useReactQueryAutoSave` Parameters
 

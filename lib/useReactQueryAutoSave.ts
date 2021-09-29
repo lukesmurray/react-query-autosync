@@ -40,6 +40,7 @@ export function useReactQueryAutoSave<
   autoSaveOptions,
   alertIfUnsavedChanges,
   merge,
+  mutateEnabled = true,
 }: {
   /**
    * mutationOptions passed to `useMutation`. Internally the hook uses
@@ -63,6 +64,10 @@ export function useReactQueryAutoSave<
    * and the user has made intermittent updates to the draft
    */
   merge?: MergeFunc<TData>;
+  /**
+   * boolean used to determine if the mutate function should be called, defaults to true
+   */
+  mutateEnabled?: boolean;
 }): UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TMutationContext> {
   const [draft, setDraft] = useState<TData | undefined>(undefined);
   const [serverValue, setServerValue] = useState<TData | undefined>(undefined);
@@ -112,10 +117,18 @@ export function useReactQueryAutoSave<
 
   const { mutate } = mutationResult;
 
+  const pendingSave = useRef(false);
+  const mutateEnabledRef = useRef(mutateEnabled);
+  mutateEnabledRef.current = mutateEnabled;
+
   // return a stable save function
   const save = useCallback(() => {
     if (draftRef.current !== undefined) {
-      mutate(draftRef.current);
+      if (mutateEnabledRef.current === false) {
+        pendingSave.current = true;
+      } else {
+        mutate(draftRef.current);
+      }
     }
   }, [mutate]);
 
@@ -156,6 +169,12 @@ export function useReactQueryAutoSave<
     },
     [save, saveDebounced],
   );
+
+  // automatically save if we enable mutation and are pending a save
+  if (mutateEnabledRef.current === true && pendingSave.current === true) {
+    pendingSave.current = false;
+    saveAndCancelDebounced();
+  }
 
   // confirm before the user leaves if the draft value isn't saved
   useEffect(() => {

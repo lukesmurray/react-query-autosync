@@ -59,6 +59,7 @@ export function useReactQueryAutoSync<
   autoSaveOptions,
   merge,
   alertIfUnsavedChanges,
+  mutateEnabled = true,
 }: {
   /**
    * queryOptions passed to `useQuery`
@@ -92,6 +93,10 @@ export function useReactQueryAutoSync<
    * leave the page.
    */
   alertIfUnsavedChanges?: boolean;
+  /**
+   * boolean used to determine if the mutate function should be called, defaults to true
+   */
+  mutateEnabled?: boolean;
 }): UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> {
   const [draft, setDraft] = useState<TQueryData | undefined>(undefined);
 
@@ -154,10 +159,18 @@ export function useReactQueryAutoSync<
 
   const { mutate } = mutationResult;
 
+  const pendingSave = useRef(false);
+  const mutateEnabledRef = useRef(mutateEnabled);
+  mutateEnabledRef.current = mutateEnabled;
+
   // return a stable save function
   const save = useCallback(() => {
     if (draftRef.current !== undefined) {
-      mutate(draftRef.current);
+      if (mutateEnabledRef.current === false) {
+        pendingSave.current = true;
+      } else {
+        mutate(draftRef.current);
+      }
     }
   }, [mutate]);
 
@@ -198,6 +211,12 @@ export function useReactQueryAutoSync<
     },
     [save, saveDebounced],
   );
+
+  // automatically save if we enable mutation and are pending a save
+  if (mutateEnabledRef.current === true && pendingSave.current === true) {
+    pendingSave.current = false;
+    saveAndCancelDebounced();
+  }
 
   // confirm before the user leaves if the draft value isn't saved
   useEffect(() => {
