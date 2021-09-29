@@ -33,7 +33,7 @@ export default defineConfig({
         typescript({
           declaration: true,
           declarationDir: path.resolve(__dirname, "dist"),
-          include: ["./lib/*"],
+          include: ["./lib/**/*"],
         }),
       ],
     },
