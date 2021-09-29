@@ -26,7 +26,7 @@ export type UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, 
    * Function used to update server data. Be careful avoid modifying the draft
    * directly and instead set the draft to a copy.
    */
-  setDraft: React.Dispatch<React.SetStateAction<TQueryData | undefined>>;
+  setDraft: (data: TQueryData | undefined) => void;
   /**
    * The current value of the data either locally modified or taken from the server.
    * May be undefined if the data is not yet loaded.
@@ -60,6 +60,7 @@ export function useReactQueryAutoSync<
   merge,
   alertIfUnsavedChanges,
   mutateEnabled = true,
+  draftProvider = undefined,
 }: {
   /**
    * queryOptions passed to `useQuery`
@@ -97,8 +98,24 @@ export function useReactQueryAutoSync<
    * boolean used to determine if the mutate function should be called, defaults to true
    */
   mutateEnabled?: boolean;
+  /**
+   * If you want to pass your own draft you can
+   */
+  draftProvider?: {
+    /**
+     * Function used to update the draft
+     */
+    setDraft: (data: TQueryData | undefined) => void;
+    /**
+     * The current value of the draft
+     */
+    draft: TQueryData | undefined;
+  };
 }): UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> {
-  const [draft, setDraft] = useState<TQueryData | undefined>(undefined);
+  const [stateDraft, setStateDraft] = useState<TQueryData | undefined>(undefined);
+
+  const draft = draftProvider !== undefined ? draftProvider.draft : stateDraft;
+  const setDraft = draftProvider !== undefined ? draftProvider.setDraft : setStateDraft;
 
   // create a stable ref to the draft so we can memoize the save function
   const draftRef = useRef<TQueryData | undefined>(undefined);
@@ -267,17 +284,15 @@ export function useReactQueryAutoSync<
   }, [alertIfUnsavedChanges, draft, saveAndCancelDebounced]);
 
   // merge the local data with the server data when the server data changes
+  const currentDraftValue = useRef(draft);
+  currentDraftValue.current = draft;
   useEffect(() => {
     const serverData = queryResult.data;
     const currentMergeFunc = mergeRef.current;
-    if (serverData !== undefined && currentMergeFunc !== undefined) {
-      setDraft((localData) => {
-        if (localData !== undefined) {
-          return currentMergeFunc(serverData, localData);
-        }
-      });
+    if (serverData !== undefined && currentMergeFunc !== undefined && currentDraftValue.current !== undefined) {
+      setDraft(currentMergeFunc(serverData, currentDraftValue.current));
     }
-  }, [queryResult.data]);
+  }, [queryResult.data, setDraft]);
 
   return {
     save: saveAndCancelDebounced,

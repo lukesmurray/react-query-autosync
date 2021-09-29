@@ -15,7 +15,7 @@ export type UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TM
    * Function used to update server data. Be careful avoid modifying the draft
    * directly and instead set the draft to a copy.
    */
-  setDraft: React.Dispatch<React.SetStateAction<TData | undefined>>;
+  setDraft: (data: TData | undefined) => void;
   /**
    * The current value of the data either locally modified or taken from the server.
    * May be undefined if the data is not yet loaded.
@@ -41,6 +41,7 @@ export function useReactQueryAutoSave<
   alertIfUnsavedChanges,
   merge,
   mutateEnabled = true,
+  draftProvider = undefined,
 }: {
   /**
    * mutationOptions passed to `useMutation`. Internally the hook uses
@@ -68,8 +69,24 @@ export function useReactQueryAutoSave<
    * boolean used to determine if the mutate function should be called, defaults to true
    */
   mutateEnabled?: boolean;
+  /**
+   * If you want to pass your own draft you can
+   */
+  draftProvider?: {
+    /**
+     * Function used to update the draft
+     */
+    setDraft: (data: TData | undefined) => void;
+    /**
+     * The current value of the draft
+     */
+    draft: TData | undefined;
+  };
 }): UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TMutationContext> {
-  const [draft, setDraft] = useState<TData | undefined>(undefined);
+  const [stateDraft, setStateDraft] = useState<TData | undefined>(undefined);
+  const draft = draftProvider !== undefined ? draftProvider.draft : stateDraft;
+  const setDraft = draftProvider !== undefined ? draftProvider.setDraft : setStateDraft;
+
   const [serverValue, setServerValue] = useState<TData | undefined>(undefined);
 
   // create a stable ref to the draft so we can memoize the save function
