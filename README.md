@@ -64,7 +64,7 @@ In addition to the sync hook the library exposes `useReactQueryAutoSave` (save).
 - `merge`: function used to merge updates from the server with local changes to server data. If undefined the hook will ignore background updates from the server even if `refetchInterval` is supplied and local changes will take precedence. The merge function is also used when an error occurs while saving data.
 - `alertIfUnsavedChanges`: ask the user to confirm before leaving the page if there are unsaved changes. If undefined the hook will not ask the user to confirm before leaving.
 - `mutateEnabled`: similar to the `enabled` parameter of `useQuery`. If `mutateEnabled` is false and the hook tries to save to the server, a pending save will be created, and when `mutateEnabled` is toggled to true the pending save will immediately execute. Can be useful if you need to use dependent queries to get data to perform the mutation. If undefined, `mutateEnabled` defaults to true.
-- `draftProvider`: see draftProviderBelow. If undefined the hook will use `useState` to create the `draft` value.
+- `draftProvider`: **experimental** see draftProviderBelow. If undefined the hook will use `useState` to create the `draft` value.
 
 ### `useReactQueryAutoSave` Parameters
 
@@ -75,14 +75,14 @@ Same as `useReactQueryAutoSync` but does not have `queryOptions`.
 - `wait`: number of milliseconds to delay the debounce function
 - `maxWait`: maximum number of milliseconds to delay the debounce function. If undefined there is no max delay.
 
-### `draftProvider` **experimental**
+### `draftProvider` (**experimental**)
 
 - `draft`: The current value of the draft.
 - `setDraft`: Function used to update the draft. `(value) => void`.
 
 By default `useReactQueryAutoSync` uses `useState` to implement the draft.
 However there are times when this is not desired.
-For example, if you want to display the same synchronized value in multiple places in your application you have to either [list state up](https://reactjs.org/docs/lifting-state-up.html) or use a [react context](https://reactjs.org/docs/context.html).
+For example, if you want to display the same synchronized value in multiple places in your application you have to either [lift state up](https://reactjs.org/docs/lifting-state-up.html) or use a [react context](https://reactjs.org/docs/context.html).
 If you try using `useReactQueryAutoSync` in multiple locations the values may eventually sync but it would be a sub optimal experience since synchronizing the values would require multiple round trips to the server.
 Instead you can use the `draftProvider` and provide your own draft values backed by a library such as recoil or jotai or zustand.
 Here is a simple example which creates a `draftProvider` using jotai.
