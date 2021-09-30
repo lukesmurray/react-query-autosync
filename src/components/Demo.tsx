@@ -67,7 +67,7 @@ export function Demo() {
 function useEvents(
   eventElementRef: React.MutableRefObject<SVGSVGElement | null>,
   strokes: Record<string, number[][]> | undefined,
-  setStrokes: React.Dispatch<React.SetStateAction<Record<string, number[][]> | undefined>>,
+  setStrokes: (newStrokes: Record<string, number[][]> | undefined) => void,
 ) {
   const [currentStrokeId, setCurrentStrokeId] = useState<string | null>(null);
   useEffect(() => {
