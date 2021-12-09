@@ -54,7 +54,7 @@ In this example we use query and mutation options to tell `useReactQueryAutoSync
 
 Similarly to `useState` you can only change the `draft` value using the `setDraft` function.
 
-In addition to the sync hook the library exposes `useReactQueryAutoSave` (save). The difference between the two is the save hook is unidirectional and only saves a local value to the server when the local value changes. This can be useful for automatically saving things like logs, user analytivcs, or error reports. The sync hook is useful for things like documents where you don't want the user to have to press a save button to keep their changes.
+In addition to the sync hook the library exposes `useReactQueryAutoSave` (save). The difference between the two is the save hook is unidirectional and only saves a local value to the server when the local value changes. This can be useful for automatically saving things like logs, user analytics, or error reports. The sync hook is useful for things like documents where you don't want the user to have to press a save button to keep their changes.
 
 ### `useReactQueryAutoSync` Parameters
 
