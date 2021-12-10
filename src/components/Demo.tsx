@@ -17,6 +17,8 @@ export function Demo() {
   const {
     draft: strokes,
     setDraft: setStrokes,
+    // we use the queryResult data to provide an "unsaved changes"
+    // indicator
     queryResult: { data: serverStrokes },
   } = useStrokes();
 
@@ -59,6 +61,7 @@ export function Demo() {
             })}
         </g>
       </svg>
+      {/* render the unsaved changes indicator */}
       <SaveIndicator isUnsyncedChanges={serverStrokes !== strokes} />
     </Wrapper>
   );
@@ -122,10 +125,16 @@ function useEvents(
   }, [currentStrokeId, eventElementRef, setStrokes, strokes]);
 }
 
+// this function contains the entire integration with react query
 function useStrokes() {
+  
+  // hook which renders GUI controls and exposes their values as reactive properties
   const { refetchInterval, wait, maxWait } = useControls({ refetchInterval: 1000, wait: 50, maxWait: 250 });
+  
+  
   // all the logic for saving is embedded in this hook
   return useReactQueryAutoSync({
+    // pass standard query options for loading data from the server
     queryOptions: {
       queryKey: "getStrokes",
       queryFn: async () =>
@@ -135,6 +144,7 @@ function useStrokes() {
       // refetch interval for querying from the server
       refetchInterval,
     },
+    // pass standard mutation options for saving data to the server
     mutationOptions: {
       mutationFn: (strokes) =>
         fetch("/save", {
@@ -143,12 +153,12 @@ function useStrokes() {
           body: JSON.stringify(strokes),
         }),
     },
-    // auto save option for saving to the server
+    // use parameters to control the frequency of saves
     autoSaveOptions: {
       wait,
       maxWait,
     },
-    // we can merge the local/server state
+    // provide a function to merge local and server state
     merge: (remote, local) => ({
       ...remote,
       ...local,
