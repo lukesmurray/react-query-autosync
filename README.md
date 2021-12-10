@@ -6,7 +6,7 @@
 A helpful react hook for building interfaces which require autosave.
 Read more about the motivation and design in the [original blog post](https://lsmurray.com/blog/react-query-auto-sync-hook).
 Check out the quick example below or feel free to view the [drawing demo](https://react-query-auto-sync.lsmurray.com/) online.
-The code for the demo is in the [src](./src) folder and can be run locally with `yarn dev`.
+The code for the demo is in the [src folder](./src) and can be run locally with `yarn dev`. The hook is used in the `useStrokes` function in [src/components/Demo.tsx](.src/components/Demo.tsx).
 
 ## Installation
 
