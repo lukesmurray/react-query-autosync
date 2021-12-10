@@ -105,6 +105,8 @@ function Example() {
 
 ⚠️ This is an experimental feature and has issues such as potentially issuing a mutation for each hook.
 
+> For instructions on how to use `draftProvider` safely [check this issue comment](https://github.com/lukesmurray/react-query-autosync/issues/3#issuecomment-990052496).
+
 ## Example
 
 Here is a more complex example which shows off more of the features of `useReactQueryAutoSync`.
