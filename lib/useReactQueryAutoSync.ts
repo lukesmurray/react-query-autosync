@@ -10,6 +10,8 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "react-query";
+import { ReactQueryAutoSyncSaveStatus } from "./ReactQueryAutoSyncSaveStatus";
+import { UseReactQueryAutoSyncDraftProvider } from "./UseReactQueryAutoSyncDraftProvider";
 import { AutoSaveOptions } from "./utils/AutoSaveOptions";
 import { EmptyDebounceFunc } from "./utils/EmptyDebounceFunc";
 import { MergeFunc } from "./utils/MergeFunc";
@@ -40,17 +42,10 @@ export type UseReactQueryAutoSyncResult<TQueryFnData, TQueryError, TMutationData
    * The result of `useMutation`
    */
   mutationResult: UseMutationResult<TMutationData, TMutationError, TQueryFnData, TMutationContext>;
-};
-
-export type UseReactQueryAutoSyncDraftProvider<TQueryFnData> = {
   /**
-   * Function used to update the draft
+   * The current save status of the query
    */
-  setDraft: (data: TQueryFnData | undefined) => void;
-  /**
-   * The current value of the draft
-   */
-  draft: TQueryFnData | undefined;
+  saveStatus: ReactQueryAutoSyncSaveStatus;
 };
 
 /**
@@ -295,11 +290,22 @@ export function useReactQueryAutoSync<
     }
   }, [queryResult.data, setDraft]);
 
+  const saveStatus: ReactQueryAutoSyncSaveStatus = queryResult.isLoading
+    ? "loading"
+    : mutationResult.isLoading
+    ? "saving"
+    : mutationResult.isError || queryResult.isError
+    ? "error"
+    : queryResult.data === draft
+    ? "saved"
+    : "unsaved";
+
   return {
     save: saveAndCancelDebounced,
     setDraft,
     draft: draft ?? queryResult.data,
     queryResult,
     mutationResult,
+    saveStatus,
   };
 }

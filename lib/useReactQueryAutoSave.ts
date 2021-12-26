@@ -1,6 +1,8 @@
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, UseMutationOptions, UseMutationResult } from "react-query";
+import { ReactQueryAutoSaveSaveStatus } from "./ReactQueryAutoSyncSaveStatus";
+import { UseReactQueryAutoSyncDraftProvider } from "./UseReactQueryAutoSyncDraftProvider";
 import { AutoSaveOptions, EmptyDebounceFunc, MergeFunc } from "./utils";
 
 /**
@@ -25,6 +27,10 @@ export type UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TM
    * The result of `useMutation`
    */
   mutationResult: UseMutationResult<TMutationData, TMutationError, TData, TMutationContext>;
+  /**
+   * The current save status of the query
+   */
+  saveStatus: ReactQueryAutoSaveSaveStatus;
 };
 
 /**
@@ -72,16 +78,7 @@ export function useReactQueryAutoSave<
   /**
    * If you want to pass your own draft you can
    */
-  draftProvider?: {
-    /**
-     * Function used to update the draft
-     */
-    setDraft: (data: TData | undefined) => void;
-    /**
-     * The current value of the draft
-     */
-    draft: TData | undefined;
-  };
+  draftProvider?: UseReactQueryAutoSyncDraftProvider<TData>;
 }): UseReactQueryAutoSaveResult<TData, TMutationData, TMutationError, TMutationContext> {
   const [stateDraft, setStateDraft] = useState<TData | undefined>(undefined);
   const draft = draftProvider !== undefined ? draftProvider.draft : stateDraft;
@@ -222,10 +219,19 @@ export function useReactQueryAutoSave<
     };
   }, [alertIfUnsavedChanges, draft, saveAndCancelDebounced]);
 
+  const saveStatus: ReactQueryAutoSaveSaveStatus = mutationResult.isLoading
+    ? "saving"
+    : mutationResult.isError
+    ? "error"
+    : serverValue === draft
+    ? "saved"
+    : "unsaved";
+
   return {
     save: saveAndCancelDebounced,
     setDraft,
     draft,
     mutationResult,
+    saveStatus,
   };
 }

@@ -14,13 +14,7 @@ export function Demo() {
   const rect = useRect(eventElementRef, { observe: true });
 
   // creating a synced value is nearly as simple as useState
-  const {
-    draft: strokes,
-    setDraft: setStrokes,
-    // we use the queryResult data to provide an "unsaved changes"
-    // indicator
-    queryResult: { data: serverStrokes },
-  } = useStrokes();
+  const { draft: strokes, setDraft: setStrokes, saveStatus } = useStrokes();
 
   useEvents(eventElementRef, strokes, setStrokes);
 
@@ -62,7 +56,7 @@ export function Demo() {
         </g>
       </svg>
       {/* render the unsaved changes indicator */}
-      <SaveIndicator isUnsyncedChanges={serverStrokes !== strokes} />
+      <SaveIndicator isUnsyncedChanges={saveStatus === "unsaved"} />
     </Wrapper>
   );
 }
@@ -129,7 +123,7 @@ function useEvents(
 function useStrokes() {
   // hook which renders GUI controls and exposes their values as reactive properties
   const { refetchInterval, wait, maxWait } = useControls({ refetchInterval: 1000, wait: 50, maxWait: 250 });
-  
+
   // all the logic for saving is embedded in this hook
   return useReactQueryAutoSync({
     // pass standard query options for loading data from the server
