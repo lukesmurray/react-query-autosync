@@ -17,7 +17,7 @@ import { MergeFunc } from "./utils/MergeFunc";
 /**
  * Return type of UseReactQueryAutoSync
  */
-export type UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> = {
+export type UseReactQueryAutoSyncResult<TQueryFnData, TQueryError, TMutationData, TMutationError, TMutationContext> = {
   /**
    * Function used to manually save the data to the server
    */
@@ -26,20 +26,31 @@ export type UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, 
    * Function used to update server data. Be careful avoid modifying the draft
    * directly and instead set the draft to a copy.
    */
-  setDraft: (data: TQueryData | undefined) => void;
+  setDraft: (data: TQueryFnData | undefined) => void;
   /**
    * The current value of the data either locally modified or taken from the server.
    * May be undefined if the data is not yet loaded.
    */
-  draft: TQueryData | undefined;
+  draft: TQueryFnData | undefined;
   /**
    * The result of `useQuery`
    */
-  queryResult: UseQueryResult<TQueryData, TQueryError>;
+  queryResult: UseQueryResult<TQueryFnData, TQueryError>;
   /**
    * The result of `useMutation`
    */
-  mutationResult: UseMutationResult<TMutationData, TMutationError, TQueryData, TMutationContext>;
+  mutationResult: UseMutationResult<TMutationData, TMutationError, TQueryFnData, TMutationContext>;
+};
+
+export type UseReactQueryAutoSyncDraftProvider<TQueryFnData> = {
+  /**
+   * Function used to update the draft
+   */
+  setDraft: (data: TQueryFnData | undefined) => void;
+  /**
+   * The current value of the draft
+   */
+  draft: TQueryFnData | undefined;
 };
 
 /**
@@ -48,7 +59,6 @@ export type UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, 
 export function useReactQueryAutoSync<
   TQueryFnData = unknown,
   TQueryError = unknown,
-  TQueryData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
   TMutationData = unknown,
   TMutationError = unknown,
@@ -65,7 +75,7 @@ export function useReactQueryAutoSync<
   /**
    * queryOptions passed to `useQuery`
    */
-  queryOptions: UseQueryOptions<TQueryFnData, TQueryError, TQueryData, TQueryKey>;
+  queryOptions: UseQueryOptions<TQueryFnData, TQueryError, TQueryFnData, TQueryKey>;
   /**
    * mutationOptions passed to `useMutation`. Internally the hook uses
    * `onMutate`, `onError`, and `onSettled` to optimistically update the draft.
@@ -73,7 +83,7 @@ export function useReactQueryAutoSync<
   mutationOptions: UseMutationOptions<
     TMutationData,
     TMutationError,
-    TQueryData, // input to mutate is the same as the output of the query
+    TQueryFnData, // input to mutate is the same as the output of the query
     TMutationContext
   >;
   /**
@@ -87,7 +97,7 @@ export function useReactQueryAutoSync<
    * the server data.  if undefined the hook will ignore background updates from
    * the server and local changes will overwrite data from the server.
    */
-  merge?: MergeFunc<TQueryData>;
+  merge?: MergeFunc<TQueryFnData>;
   /**
    * Ask the user to confirm before leaving the page if there are local
    * modification to server data.  If false or undefined the user is allowed to
@@ -101,28 +111,19 @@ export function useReactQueryAutoSync<
   /**
    * If you want to pass your own draft you can
    */
-  draftProvider?: {
-    /**
-     * Function used to update the draft
-     */
-    setDraft: (data: TQueryData | undefined) => void;
-    /**
-     * The current value of the draft
-     */
-    draft: TQueryData | undefined;
-  };
-}): UseReactQueryAutoSyncResult<TQueryData, TQueryError, TMutationData, TMutationError, TMutationContext> {
-  const [stateDraft, setStateDraft] = useState<TQueryData | undefined>(undefined);
+  draftProvider?: UseReactQueryAutoSyncDraftProvider<TQueryFnData>;
+}): UseReactQueryAutoSyncResult<TQueryFnData, TQueryError, TMutationData, TMutationError, TMutationContext> {
+  const [stateDraft, setStateDraft] = useState<TQueryFnData | undefined>(undefined);
 
   const draft = draftProvider !== undefined ? draftProvider.draft : stateDraft;
   const setDraft = draftProvider !== undefined ? draftProvider.setDraft : setStateDraft;
 
   // create a stable ref to the draft so we can memoize the save function
-  const draftRef = useRef<TQueryData | undefined>(undefined);
+  const draftRef = useRef<TQueryFnData | undefined>(undefined);
   draftRef.current = draft;
 
   // create a stable ref to the merge so we can memoize the merge effect
-  const mergeRef = useRef<MergeFunc<TQueryData> | undefined>(undefined);
+  const mergeRef = useRef<MergeFunc<TQueryFnData> | undefined>(undefined);
   mergeRef.current = merge;
 
   const queryResult = useQuery(queryOptions);

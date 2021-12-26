@@ -127,10 +127,8 @@ function useEvents(
 
 // this function contains the entire integration with react query
 function useStrokes() {
-  
   // hook which renders GUI controls and exposes their values as reactive properties
   const { refetchInterval, wait, maxWait } = useControls({ refetchInterval: 1000, wait: 50, maxWait: 250 });
-  
   
   // all the logic for saving is embedded in this hook
   return useReactQueryAutoSync({

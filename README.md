@@ -58,7 +58,7 @@ In addition to the sync hook the library exposes `useReactQueryAutoSave` (save).
 
 ### `useReactQueryAutoSync` Parameters
 
-- `queryOptions` **required**: these are the query options passed to `useQuery`. Make sure to set `refetchInterval` if you want to enable automatic polling.
+- `queryOptions` **required**: these are the query options passed to `useQuery`. Make sure to set `refetchInterval` if you want to enable automatic polling. React query auto sync does not support query data selectors so make sure not to pass `select`. This is because react query auto sync expects the input to the mutate function to have the same type as the return value of the query function.
 - `mutationOptions` **required**: these are the mutation options passed to `useMutation`. Internally the hook uses `onMutate`, `onError`, and `onSettled` to optimistically update the state but it will call your versions of these functions as well. The hook uses the key `previousData` to save the previous data in the `onMutate` context.
 - `autoSaveOptions`: see autoSaveOptionsBelow. If undefined the hook will not automatically save data since it will assume a debounce time of `Infinity`.
 - `merge`: function used to merge updates from the server with local changes to server data. If undefined the hook will ignore background updates from the server even if `refetchInterval` is supplied and local changes will take precedence. The merge function is also used when an error occurs while saving data.
